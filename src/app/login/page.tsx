@@ -14,13 +14,12 @@ export default function LoginPage() {
     const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setMessage('Signing in...');
-        try {
-            await authClient.signIn.email({ email, password });
-            setMessage('Sign-in successful!');
-            // You can add a redirect here, for example:
-            // router.push('/dashboard');
-        } catch (error: any) {
-            setMessage(`Sign-in failed: ${error.message}`);
+        const { error } = await authClient.auth.signInWithPassword({ email, password })
+        if (error) {
+            setMessage(`Sign-in Failed: ${error.message}`);
+        }
+        else {
+            setMessage('Sign-in Sucessful');
         }
     };
 
@@ -28,10 +27,16 @@ export default function LoginPage() {
         event.preventDefault();
         setMessage('Signing up...');
         try {
-            await authClient.signUp.email({ email, password });
-            setMessage('Sign-up successful! Please check your email for a verification link.');
+            const { error } = await authClient.auth.signUp({ email, password });
+            if (error && error.message) {
+                setMessage(`Sign-up failed: ${error.message}`);
+            } else if (error) {
+                setMessage(`Sign-up failed: ${JSON.stringify(error)}`);
+            } else {
+                setMessage('Sign-up successful! Please check your email for a verification link.');
+            }
         } catch (error: any) {
-            setMessage(`Sign-up failed: ${error.message}`);
+            setMessage(`Sign-up failed: ${error?.message || JSON.stringify(error)}`);
         }
     };
 
