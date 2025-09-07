@@ -20,24 +20,41 @@ export default function LoginPage() {
         }
         else {
             setMessage('Sign-in Sucessful');
+            //set the user to new page
+            window.location.href = "/chronos";
         }
+        //clear out values after submit
+        setEmail('');
+        setPassword('');
     };
 
     const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setMessage('Signing up...');
         try {
-            const { error } = await authClient.auth.signUp({ email, password });
+            const { data, error } = await authClient.auth.signUp({ email, password });
             if (error && error.message) {
                 setMessage(`Sign-up failed: ${error.message}`);
             } else if (error) {
                 setMessage(`Sign-up failed: ${JSON.stringify(error)}`);
             } else {
+                //store the user in db
+                const {error: dbError} = await authClient
+                    .from('profiles')
+                    .insert({id: data.user?.id, email: data.user?.email});
+
+                if(dbError){
+                    console.error('Database insertion failed', dbError.message);
+                    
+                }
                 setMessage('Sign-up successful! Please check your email for a verification link.');
             }
         } catch (error: any) {
             setMessage(`Sign-up failed: ${error?.message || JSON.stringify(error)}`);
         }
+         //clear out values after submit
+        setEmail('');
+        setPassword('');
     };
 
     const togglePasswordVisibility = () => {
@@ -47,7 +64,7 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-white text-white">
             <div className="relative p-8 bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-                {/* Decorative elements based on the image */}
+              
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-indigo-500 shadow-[0_0_15px_#6b46c1]">
                     <BrainCircuit className="w-6 h-6 text-white" />
                 </div>
@@ -122,6 +139,7 @@ export default function LoginPage() {
                         </div>
                         <button
                             type="submit"
+
                             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition"
                         >
                             Sign In
